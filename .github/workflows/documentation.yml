@@ -1,14 +1,48 @@
-name: Doxygen GitHub Pages Deploy Action
+name: Deploy documentation to Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: DenverCoder1/doxygen-github-pages-action@v1.3.0
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: sudo apt install -y doxygen
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Build with Hugo
+        run: doxygen
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          path: '${{github.workspace}}/docs/html'
+
+  deploy:
+    if: ${{ github.ref == 'refs/heads/main' }}
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
