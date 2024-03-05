@@ -1,0 +1,68 @@
+name: UI Test
+
+on: push
+
+jobs:
+  tests:
+    name: UI Test
+    runs-on: ubuntu-latest
+
+    env:
+      QT_VERSION: 6.6.1
+
+    permissions:
+      checks: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: ${{ env.QT_VERSION }}
+          modules: 'qtconnectivity qtvirtualkeyboard'
+          tools: 'tools_ninja'
+          cache: 'true'
+          set-env: 'true'
+
+      - name: Install dependencies
+        run: |
+          sudo apt install ninja-build libxcb-cursor0 bluez -y
+  
+      - name: Setup CMake
+        run: |
+          cmake --no-warn-unused-cli \
+          -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
+          -DCMAKE_BUILD_TYPE:STRING=Release \
+          -DCMAKE_MAKE_PROGRAM=/usr/bin/ninja \
+          -DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+          -S . \
+          -B build \
+          -G Ninja
+
+      - name: Build
+        run: |
+          cmake \
+          --build build \
+          --config Release \
+          --target all 
+      
+      - name: Install
+        run: cmake --install build --prefix .
+
+      - name: Run headless test
+        run: |
+          export LD_LIBRARY_PATH=$PWD/build/libs/:$LD_LIBRARY_PATH
+          echo "============="
+          ls -la
+          echo "============="
+          ls -la bin/
+          echo "============="
+          ls -la build/
+          echo "============="
+          ./bin/app-test -platform offscreen
+            
