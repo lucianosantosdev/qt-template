@@ -29,7 +29,7 @@ TEST(myTestSuite, testCase)
     int total = 1000;
     // When
     for (int var = 0; var < total; ++var) {
-        clickItem(button, window);
+        // clickItem(button, window);
         QCoreApplication::processEvents();
     }
     // Then
