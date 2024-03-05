@@ -1,9 +1,9 @@
-#define CATCH_CONFIG_RUNNER
-#include <QtGui/QGuiApplication>
-#include <catch2/catch.hpp>
+#include <QGuiApplication>
+#include <gtest/gtest.h>
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
-    return Catch::Session().run(argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

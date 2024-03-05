@@ -1,27 +1,62 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(MyTestCase LANGUAGES CXX)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(PROJECT_NAME app-test)
+
+project(${PROJECT_NAME} LANGUAGES CXX)
 
 enable_testing()
 
-SET(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Gui)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Gui)
+if ($ENV{GOOGLETEST_DIR})
+    get_filename_component(_GTEST_BASE $ENV{GOOGLETEST_DIR} REALPATH)
+elseif (EXISTS "C:/Users/Luciano_Olby/workspace/monitor-qt-trial/libs/googletest") # set by QC
+    get_filename_component(_GTEST_BASE "C:/Users/Luciano_Olby/workspace/monitor-qt-trial/libs/googletest" REALPATH) # set by QC
+elseif (UNIX AND EXISTS "/usr/src/gtest")
+    set(_GTEST_BASE "/usr/src/gtest")
+endif()
 
-add_executable(MyTestCase tst_mytestcase.cpp main.cpp
-    Base.h Base.cpp)
-add_test(NAME MyTestCase COMMAND MyTestCase)
+if (_GTEST_BASE AND NOT EXISTS "${_GTEST_BASE}/googletest/src/gtest-all.cc"
+        OR NOT EXISTS "${_GTEST_BASE}/googlemock/src/gmock-all.cc")
+    message(ERROR "Missing source components (gtest-all.cc and/or gmock-all.cc).")
+endif()
 
-target_link_libraries(MyTestCase PRIVATE Qt${QT_VERSION_MAJOR}::Gui)
+find_package(Threads REQUIRED)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Test Quick QuickControls2 Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Test Quick QuickControls2 Widgets)
 
-if (DEFINED ENV{CATCH_INCLUDE_DIR})
-    set(CATCH_INCLUDE_DIR $ENV{CATCH_INCLUDE_DIR})
-else ()
-    set(CATCH_INCLUDE_DIR "") # set by Qt Creator wizard
-endif ()
-if (CATCH_INCLUDE_DIR STREQUAL "")
-    message("CATCH_INCLUDE_DIR is not set, assuming Catch2 can be found automatically in your system")
-elseif (EXISTS ${CATCH_INCLUDE_DIR})
-    include_directories(${CATCH_INCLUDE_DIR})
-endif ()
+include_directories(
+    ${_GTEST_BASE}/googletest ${_GTEST_BASE}/googletest/include
+    ${_GTEST_BASE}/googlemock ${_GTEST_BASE}/googlemock/include
+)
+
+set(TEST_SOURCES
+    tst_mytestcase.cpp
+    main.cpp
+)
+
+add_executable(
+    ${PROJECT_NAME}
+    ${TEST_SOURCES}
+    ${_GTEST_BASE}/googletest/src/gtest-all.cc
+    ${_GTEST_BASE}/googlemock/src/gmock-all.cc
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Threads::Threads
+    app-lib
+    Qt${QT_VERSION_MAJOR}::Widgets
+    Qt${QT_VERSION_MAJOR}::Quick
+    Qt${QT_VERSION_MAJOR}::QuickControls2
+    Qt${QT_VERSION_MAJOR}::Test
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${ROOT_PROJECT_DIR}/app/applib/src)
