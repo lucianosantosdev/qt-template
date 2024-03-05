@@ -18,8 +18,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if ($ENV{GOOGLETEST_DIR})
     get_filename_component(_GTEST_BASE $ENV{GOOGLETEST_DIR} REALPATH)
-elseif (EXISTS "C:/Users/Luciano_Olby/workspace/monitor-qt-trial/libs/googletest") # set by QC
-    get_filename_component(_GTEST_BASE "C:/Users/Luciano_Olby/workspace/monitor-qt-trial/libs/googletest" REALPATH) # set by QC
+elseif (EXISTS "${ROOT_PROJECT_DIR}/googletest") # set by QC
+    get_filename_component(_GTEST_BASE "${ROOT_PROJECT_DIR}/googletest" REALPATH) # set by QC
 elseif (UNIX AND EXISTS "/usr/src/gtest")
     set(_GTEST_BASE "/usr/src/gtest")
 endif()
